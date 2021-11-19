@@ -5,7 +5,17 @@ import time
 from tkinter import messagebox
 
 player_num = 0
-os.system('pause')
+gamespeed = input('게임속도를 입력하세요(1~4, 4가 가장 빠름)')
+while gamespeed not in ['1', '2', '3', '4']:
+    print('잘못 입력하셨습니다.')
+    gamespeed = input('게임속도를 입력하세요(1~4, 4가 가장 빠름)')
+gamespeed = int(gamespeed)
+median = []
+for i in range(1, 50):
+    median.append(i)
+
+random.shuffle(median)
+unlucky = median[0:5]
 
 class Player():
     def __init__(self, tag, locat, name, x, y, mal):
@@ -16,29 +26,53 @@ class Player():
         self.y = y
         self.mal = mal
 
-def roll(player_list, canvas):
-    for p in player_list:
-        prev = p.locat
+def roll(root2, player_list, canvas):
+    global gamespeed
+    def change_monitor():
+        canvas.delete(player_list[i].tag)
+        canvas.create_image(player_list[i].x, player_list[i].y, image=player_list[i].mal, tag=player_list[i].tag)
+        if gamespeed == 1:
+            time.sleep(1)
+        elif gamespeed == 2:
+            time.sleep(0.5)
+        elif gamespeed == 3:
+            time.sleep(0.25)
+
+        root2.update()
+
+    for i in range(len(player_list)):
+        prev = player_list[i].locat
         dice = random.choice([1, 2, 3, 4, 5, 6])
-        p.locat += dice
-        print('prev:', prev, 'cnow', p.locat)
-        if ((p.locat-1) // 10) != ((prev-1) // 10):
-            if player_list.index(p) % 2 == 0:
-                p.x = 70 + 65 * ((p.locat-1) % 10)
-                p.y -= 65
+        player_list[i].locat += dice
+        if player_list[i].locat in unlucky:
+            print("Player %d is unlucky!" %(i+1))
+            player_list[i].locat = 1
+            if i % 2 == 0:
+                player_list[i].x = 70
+                player_list[i].y = 470 + 10 * i
             else:
-                p.x = 90 + 65 * ((p.locat-1) % 10)
-                p.y -= 65
+                player_list[i].x = 90
+                player_list[i].y = 470 + 20 * (i // 2)
+
         else:
-            p.x = p.x + 65 * dice
-            p.y = p.y
-        canvas.delete(p.tag)
-        canvas.create_image(p.x, p.y, image=p.mal, tag=p.tag)
+            if ((player_list[i].locat-1) // 10) != ((prev-1) // 10):
+                if i % 2 == 0:
+                    player_list[i].x = 70 + 65 * ((player_list[i].locat-1) % 10)
+                    player_list[i].y -= 65
+                else:
+                    player_list[i].x = 90 + 65 * ((player_list[i].locat-1) % 10)
+                    player_list[i].y -= 65
+            else:
+                player_list[i].x = player_list[i].x + 65 * dice
+                player_list[i].y = player_list[i].y
+        print('prev:', prev, 'now:', player_list[i].locat)
+        change_monitor()
+    print()
+
+    for p in player_list:
         if p.locat >= 50:
             messagebox.showinfo(title='게임 오버', message=p.name + ' 승리!')
             exit(0)
-    for p in player_list:
-        print(p.locat)
 
 def gameplay(player_num):
     print(player_num)
@@ -57,7 +91,7 @@ def gameplay(player_num):
     num_label = tkinter.Label(root2, text='게임 인원수: ' + str(player_num))
     num_label.place(x=0, y=0)
 
-    roll_button = tkinter.Button(text='주사위 굴리기', command=lambda: roll(player_list, canvas))
+    roll_button = tkinter.Button(text='주사위 굴리기', command=lambda: roll(root2, player_list, canvas))
     roll_button.place(x=380, y=100)
 
     board = tkinter.PhotoImage(file='./board.png')
@@ -113,7 +147,6 @@ def gameplay(player_num):
 
     for i in range(player_num):
         player_pos.append(1)
-
     root2.mainloop()
 
 
@@ -123,19 +156,19 @@ root.resizable(False, False)
 canvas = tkinter.Canvas(root, width=800, height=600)
 canvas.pack()
 
-game_title = tkinter.PhotoImage(file='./dicewhole.png')
+game_title = tkinter.PhotoImage(file='./dicewhole.png', master=root)
 canvas.create_image(380, 360, image=game_title, tag = 'title')
 
 label = tkinter.Label(root, text='게임 인원수를 고르세요.')
 label.place(x=300, y=400)
 
-button_1 = tkinter.Button(text='혼자', command=lambda: gameplay(1))
+button_1 = tkinter.Button(text='혼자', command=lambda: gameplay(1), master=root)
 button_1.place(x=300, y=430)
-button_1 = tkinter.Button(text='2명', command=lambda: gameplay(2))
+button_1 = tkinter.Button(text='2명', command=lambda: gameplay(2), master=root)
 button_1.place(x=340, y=430)
-button_1 = tkinter.Button(text='3명', command=lambda: gameplay(3))
+button_1 = tkinter.Button(text='3명', command=lambda: gameplay(3), master=root)
 button_1.place(x=380, y=430)
-button_1 = tkinter.Button(text='4명', command=lambda: gameplay(4))
+button_1 = tkinter.Button(text='4명', command=lambda: gameplay(4), master=root)
 button_1.place(x=420, y=430)
 
 root.mainloop()
